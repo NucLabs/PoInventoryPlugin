@@ -1,0 +1,55 @@
+---
+# Example inventory configuration for the ib_pf_ms_bhr.inv_plugins.restapi plugin
+# Save this file as inventory.restapi.yml
+#
+# The REST API must return a JSON array of objects with at least:
+#   - ComputerName: The hostname (e.g., "server01")
+#   - DomainName: The domain (e.g., "example.com")
+# These are combined to form the FQDN (e.g., "server01.example.com")
+# All other fields become host variables.
+
+plugin: ib_pf_ms_bhr.inv_plugins.restapi
+url: http://api.example.com/servers
+
+# Optional: Authentication method (none or bearer)
+# auth_method: none
+
+# For bearer token authentication:
+# auth_method: bearer
+# bearer_token: "your-bearer-token-here"
+
+# Optional: Request timeout in seconds (default: 30)
+# timeout: 30
+
+# Optional: SSL certificate verification (default: true)
+# validate_certs: true
+
+# Optional: Custom CA certificate path
+# ca_cert: /path/to/ca-bundle.crt
+
+# Optional: Additional HTTP headers
+# headers:
+#   X-Custom-Header: "custom-value"
+
+# Optional: Prefix for all host variables from the API response
+# Useful when combining multiple inventory sources to avoid variable name collisions
+# Default is empty string (no prefix)
+# Example: var_prefix: "restapi_" would create "restapi_os_type" instead of "os_type"
+# var_prefix: "restapi_"
+
+# Optional: Enable caching
+# cache: true
+# cache_plugin: ansible.builtin.jsonfile
+# cache_timeout: 3600
+# cache_connection: /tmp/restapi_inventory_cache
+
+# Optional: Constructed features for dynamic groups
+# keyed_groups:
+#   - key: environment
+#     prefix: env
+#   - key: datacenter
+#     separator: ""
+# groups:
+#   production: environment == 'prod'
+# compose:
+#   ansible_host: ip_address

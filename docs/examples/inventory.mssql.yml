@@ -1,0 +1,110 @@
+---
+# Example MSSQL inventory configuration with Kerberos authentication
+# Save this file as inventory.mssql.yml or inventory.mssql.yaml
+#
+# Requirements:
+#   - Install pymssql: pip install pymssql
+#   - For Kerberos: FreeTDS must be compiled with Kerberos support
+#   - For Kerberos: Obtain a valid ticket before running: kinit username@DOMAIN.COM
+#
+# To verify your Kerberos ticket: klist
+# To obtain a new ticket: kinit username@DOMAIN.COM
+
+plugin: ib_pf_ms_bhr.inv_plugins.mssql
+
+# Database connection settings
+# Use FQDN for Kerberos SPN resolution
+host: sqlserver.domain.com
+port: 1433
+database: inventory_db
+
+# Authentication method: 'kerberos' (default) or 'sql'
+# Kerberos uses your current Kerberos ticket (from kinit)
+# SQL requires username and password
+auth_method: kerberos
+
+# TDS protocol version (7.3 recommended for modern SQL Server)
+tds_version: "7.3"
+
+# Connection and query timeouts (in seconds)
+connect_timeout: 30
+query_timeout: 120
+
+# SQL query to retrieve inventory data
+# REQUIRED columns: ComputerName, DomainName
+# All other columns become host variables
+query: |
+  SELECT
+    s.ComputerName,
+    s.DomainName,
+    s.os_type,
+    s.os_version,
+    s.environment,
+    s.datacenter,
+    s.owner,
+    s.cpu_count,
+    s.memory_gb,
+    s.application
+  FROM servers s
+  WHERE s.active = 1
+
+# Enable caching to reduce database queries
+cache: true
+cache_plugin: jsonfile
+cache_timeout: 3600
+cache_connection: /tmp/ansible_inventory_cache
+
+# Strict mode - fail on templating errors
+strict: false
+
+# Optional: Prefix for all host variables from the database
+# Useful when combining multiple inventory sources to avoid variable name collisions
+# Default is empty string (no prefix)
+# Example: var_prefix: "mssql_" would create "mssql_os_type" instead of "os_type"
+# var_prefix: "mssql_"
+
+# Compose additional variables using Jinja2 expressions
+compose:
+  # Set ansible_host to the FQDN
+  ansible_host: inventory_hostname
+  # Calculate total memory in MB
+  total_memory_mb: memory_gb | default(0) * 1024
+
+# Add hosts to groups based on Jinja2 conditionals
+groups:
+  linux: os_type == 'Linux'
+  windows: os_type == 'Windows'
+  production: environment == 'prod'
+  development: environment == 'dev'
+  staging: environment == 'staging'
+
+# Add hosts to groups based on variable values
+keyed_groups:
+  # Creates groups like: env_prod, env_dev, env_staging
+  - prefix: env
+    key: environment
+  # Creates groups like: os_Linux, os_Windows
+  - prefix: os
+    key: os_type
+  # Creates groups like: dc_us_east, dc_eu_west
+  - prefix: dc
+    key: datacenter
+  # Creates groups like: app_webserver, app_database
+  - prefix: app
+    key: application
+    separator: "_"
+
+# ============================================================================
+# Alternative: SQL Server Authentication Example
+# ============================================================================
+# If your environment uses SQL Server authentication instead of Kerberos,
+# uncomment and use this configuration:
+#
+# auth_method: sql
+# username: ansible_user
+# password: "{{ lookup('env', 'MSSQL_PASSWORD') }}"
+#
+# Or with Ansible Vault:
+# password: !vault |
+#   $ANSIBLE_VAULT;1.1;AES256
+#   ...
