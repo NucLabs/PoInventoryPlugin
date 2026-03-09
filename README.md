@@ -19,7 +19,24 @@ This collection includes a dynamic inventory plugin that retrieves hosts from a 
 
 - Python library: `pymssql`
 - For Kerberos authentication: FreeTDS compiled with Kerberos support
-- Valid Kerberos ticket (obtain via `kinit`)
+- For Kerberos authentication: Kerberos client tools (`kinit`, `klist`)
+
+### Kerberos Authentication
+
+The plugin supports **automatic Kerberos ticket acquisition** for containerized and Ansible Execution Environment (EE) use cases. Set the following environment variables:
+
+- `SQL_USER`: Kerberos principal (e.g., `username@DOMAIN.COM`)
+- `SQL_PASS`: Password for the Kerberos principal
+
+The plugin will automatically:
+1. Create a private credential cache (ccache) file
+2. Run `kinit` to obtain a Kerberos ticket
+3. Use the ticket for database authentication
+4. Clean up the credential cache when done
+
+This makes it work seamlessly in environments where the default credential cache location may not be available.
+
+**For non-containerized environments**, you can still manually run `kinit` before using the inventory plugin if you prefer.
 
 ### Quick Start
 
@@ -43,10 +60,17 @@ query: |
   WHERE active = 1
 ```
 
-3. Obtain a Kerberos ticket:
+3. Set Kerberos credentials (for automatic authentication):
 
 ```bash
-kinit your_username@YOUR.DOMAIN.COM
+export SQL_USER="username@DOMAIN.COM"
+export SQL_PASS="your_password"
+```
+
+**Alternatively**, manually obtain a Kerberos ticket:
+
+```bash
+kinit username@DOMAIN.COM
 ```
 
 4. Test the inventory:

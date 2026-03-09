@@ -5,11 +5,19 @@
 # Requirements:
 #   - Install pymssql: pip install pymssql
 #   - For Kerberos: FreeTDS must be compiled with Kerberos support
-#   - For Kerberos: Obtain a valid ticket before running: kinit username@DOMAIN.COM
+#   - For Kerberos: Set SQL_USER and SQL_PASS environment variables for automatic kinit
+#     OR manually obtain a ticket before running: kinit username@DOMAIN.COM
 #
-# To verify your Kerberos ticket: klist
-# To obtain a new ticket: kinit username@DOMAIN.COM
-
+# Automatic Kerberos Authentication (recommended for Execution Environments):
+#   export SQL_USER="username@DOMAIN.COM"
+#   export SQL_PASS="your_password"
+#
+# The plugin will automatically run kinit and manage a private credential cache.
+#
+# Manual Kerberos Authentication (alternative):
+#   kinit username@DOMAIN.COM
+#   klist  # Verify your ticket
+#
 plugin: ib_pf_ms_bhr.inv_plugins.mssql
 
 # Database connection settings
