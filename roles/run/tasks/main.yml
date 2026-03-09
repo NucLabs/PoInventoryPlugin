@@ -1,6 +1,0 @@
----
-# tasks file for ib_pf_ms_bhr.inv_plugins.run
-
-- name: Display the value of run_my_variable
-  ansible.builtin.debug:
-    msg: "The value of run_my_variable is {{ run_my_variable }}"
